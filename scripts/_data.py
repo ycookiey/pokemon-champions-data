@@ -16,6 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 POKEMON_PATH = ROOT / "data" / "pokemon.json"
 COLLECTED_PATH = ROOT / "data" / "collected.json"
+# 技名マスタ (towakey/pokedex 由来。出自は docs/SOURCES.md、再生成は build_moves.py)。
+MOVES_PATH = ROOT / "data" / "moves.json"
 
 # 収録済みと見なす最低技数。空配列 (0技) は「未収録」であり収録済みにしない。
 MIN_MOVES = 1
@@ -32,6 +34,11 @@ def load_collected(object_pairs_hook=None) -> dict:
         COLLECTED_PATH.read_text(encoding="utf-8"),
         object_pairs_hook=object_pairs_hook,
     )
+
+
+def load_moves() -> list:
+    """技名マスタ moves.json を技名の配列として読む (towakey/pokedex 由来)."""
+    return json.loads(MOVES_PATH.read_text(encoding="utf-8"))
 
 
 def is_collected(moves: object) -> bool:
