@@ -59,12 +59,34 @@ def _validate_list_master(items: object, label: str) -> list:
     return errors
 
 
+def _validate_moves_no_variants(moves: list) -> list:
+    """技名マスタに表記ゆれ (NFKC/スペースで同一になる別表記) が無いか検証する.
+
+    マスタに同一技の別表記が両方あると、collected 側の非正規表記もマスタ照合を
+    通ってしまい「非正規表記を弾く」目的が崩れる。build_moves.py が正規表記 1 件に
+    集約するので通常は発生しないが、手編集での混入を防ぐ最後の砦。
+    """
+    if not isinstance(moves, list) or not all(isinstance(m, str) for m in moves):
+        return []  # 形式不正は _validate_list_master が報告済み
+    groups: dict[str, list] = {}
+    for m in moves:
+        groups.setdefault(_data.normalize_move_key(m), []).append(m)
+    variants = sorted(v for v in groups.values() if len(v) > 1)
+    if variants:
+        return [
+            "技名マスタ moves.json に表記ゆれ (NFKC/スペースで同一になる別表記) "
+            f"があります: {variants} — 正規表記 1 件に統一 (build_moves.py で再生成)"
+        ]
+    return []
+
+
 def main() -> int:
     # マスタ自体を先に検証する (マスタが壊れていれば収録側の検証は無意味)
     names_list = _data.load_pokemon()
     moves_list = _data.load_moves()
     master_errors = _validate_list_master(names_list, "収録対象一覧 pokemon.json")
     master_errors += _validate_list_master(moves_list, "技名マスタ moves.json")
+    master_errors += _validate_moves_no_variants(moves_list)
     if master_errors:
         print(f"マスタの検証失敗 ({len(master_errors)} 件):")
         for e in master_errors:

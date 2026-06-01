@@ -25,12 +25,41 @@ import stat
 import subprocess
 import sys
 import tempfile
+import unicodedata
 from pathlib import Path
+
+import _data
 
 OUT_PATH = Path(__file__).resolve().parents[1] / "data" / "moves.json"
 POKEDEX_URL = "https://github.com/towakey/pokedex"
 # docs/SOURCES.md の固定 commit はこの値を転記すること (ここが正本)。
 PINNED_COMMIT = "50ee303b316970bad2dfe47186978860530a7fcf"
+
+# towakey/pokedex の世代ディレクトリを古い順に並べる。同一技の世代間表記ゆれ
+# (全角/半角・スペース有無) は最新世代の綴りを正規とする (Champions は最新作
+# Scarlet_Violet に最も近いため)。GEN_ORDER 外の未知世代は最古扱い (-1)。
+GEN_ORDER = [
+    "Red_Green_Blue_Pikachu",
+    "Gold_Silver_Crystal",
+    "Ruby_Sapphire_Emerald",
+    "FireRed_LeafGreen",
+    "Diamond_Pearl_Platinum",
+    "HeartGold_SoulSilver",
+    "Black_White",
+    "Black2_White2",
+    "X_Y",
+    "OmegaRuby_AlphaSapphire",
+    "Sun_Moon",
+    "UltraSun_UltraMoon",
+    "Sword_Shield",
+    "LegendsArceus",
+    "Scarlet_Violet",
+    "LegendsZA",
+]
+
+
+def _gen_rank(gen: str) -> int:
+    return GEN_ORDER.index(gen) if gen in GEN_ORDER else -1
 
 
 def _force_rmtree(path: Path) -> None:
@@ -68,11 +97,12 @@ def build(src_root: Path) -> int:
         print(f"pokedex dir not found: {src}")
         return 2
 
-    # 全世代の waza_list.json を走査し技名を union する。type 変更等は名前に
-    # 影響しないため世代の優先順位は不要 (集合に入れるだけ)。文字列値しか持たない
-    # スキーマ違いのキー (フィールド名の紛れ込み) は dict 情報の有無で除外する。
-    names: set[str] = set()
+    # 全世代の waza_list.json を走査し、各技名が登場する最新世代の順位を記録する。
+    # 文字列値しか持たないスキーマ違いのキー (フィールド名の紛れ込み) は dict 情報の
+    # 有無で除外する。
+    best_rank: dict[str, int] = {}
     for waza_list_path in sorted(src.glob("*/waza_list.json")):
+        rank = _gen_rank(waza_list_path.parent.name)
         wl = json.loads(waza_list_path.read_text(encoding="utf-8")).get(
             "waza_list", {}
         )
@@ -81,9 +111,36 @@ def build(src_root: Path) -> int:
                 continue
             for name, info in moves.items():
                 if isinstance(info, dict) and info:
-                    names.add(name)
+                    if rank > best_rank.get(name, -2):
+                        best_rank[name] = rank
 
-    moves_out = sorted(names)
+    # 表記ゆれキーで群化し、各群から正規表記 1 件を選ぶ。最新世代を優先し、同順位は
+    # NFKC 正規形・スペース無しを優先 (安定した決定的選択)。
+    def _pick_key(name: str) -> tuple:
+        nfkc = unicodedata.normalize("NFKC", name)
+        return (
+            best_rank[name],            # 新しい世代ほど優先
+            nfkc == name,               # 既に NFKC 正規形なら優先
+            " " not in name and "　" not in name,  # スペース無しを優先
+            name,
+        )
+
+    groups: dict[str, str] = {}
+    collapsed: dict[str, list[str]] = {}
+    for name in best_rank:
+        k = _data.normalize_move_key(name)
+        collapsed.setdefault(k, []).append(name)
+        if k not in groups or _pick_key(name) > _pick_key(groups[k]):
+            groups[k] = name
+
+    # 集約された (= 複数表記を 1 件に潰した) 群を可視化する。
+    for k, variants in sorted(collapsed.items()):
+        if len(variants) > 1:
+            chosen = groups[k]
+            dropped = sorted(v for v in variants if v != chosen)
+            print(f"  表記ゆれ集約: {chosen!r} ← {dropped}")
+
+    moves_out = sorted(groups.values())
     OUT_PATH.write_text(
         json.dumps(moves_out, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
