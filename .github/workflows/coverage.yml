@@ -1,0 +1,52 @@
+name: Build coverage & deploy Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
+      - "site/**"
+      - "scripts/**"
+      - ".github/workflows/coverage.yml"
+  pull_request:
+    paths:
+      - "data/**"
+      - "scripts/**"
+      - ".github/workflows/coverage.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # ランナー組み込みの python3 を使う (標準ライブラリのみ依存、setup 不要)
+      - name: Validate collected.json (母集合との一致・形式・重複)
+        run: python3 scripts/validate_collected.py
+
+  build-deploy:
+    needs: validate
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    # Pages デプロイのみ直列化 (validate は巻き込まない)
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build coverage.json
+        run: python3 scripts/build_coverage.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4

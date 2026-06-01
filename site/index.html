@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ポケモンチャンピオンズ データ収集状況</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #1f2937;
+    --muted: #9ca3af;
+    --accent: #16a34a;
+    --accent-bg: #ecfdf5;
+    --accent-border: #a7f3d0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    margin: 0; background: var(--bg); color: var(--text); line-height: 1.5;
+  }
+  header {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 20px 24px; position: sticky; top: 0; z-index: 10;
+  }
+  .header-inner { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 17px; font-weight: 600; margin: 0 0 14px; letter-spacing: .02em; }
+  .bar { height: 8px; background: #eef0f2; border-radius: 999px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width .4s ease; }
+  .summary { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+  .summary strong { color: var(--text); font-weight: 600; }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+  .controls input[type=search] {
+    padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; min-width: 220px; background: var(--bg);
+  }
+  .controls input[type=search]:focus { outline: none; border-color: var(--accent); background: var(--card); }
+  .controls label { font-size: 13px; color: #4b5563; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  main { padding: 20px 24px; max-width: 1200px; margin: 0 auto; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .cell {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; display: flex; flex-direction: column; gap: 3px;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .cell:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.06); }
+  .cell.done { background: var(--accent-bg); border-color: var(--accent-border); }
+  .cell .name { font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .cell.done .name::after { content: "✓"; color: var(--accent); font-weight: 700; font-size: 13px; }
+  .cell .meta { font-size: 11px; color: var(--muted); }
+  .cell.done .meta { color: var(--accent); }
+  .empty { color: var(--muted); padding: 32px; text-align: center; font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <h1>ポケモンチャンピオンズ 技データ収集状況</h1>
+    <div class="bar"><span id="progress"></span></div>
+    <p class="summary" id="summary">読み込み中…</p>
+    <div class="controls">
+      <input type="search" id="q" placeholder="ポケモン名で検索" aria-label="ポケモン名で検索">
+      <label><input type="checkbox" id="onlyTodo"> 未収集のみ</label>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" hidden>該当なし</div>
+</main>
+<script>
+let DATA = null;
+const $ = (id) => document.getElementById(id);
+
+function render() {
+  if (!DATA) return;
+  const q = $("q").value.trim();
+  const onlyTodo = $("onlyTodo").checked;
+  const grid = $("grid");
+  grid.innerHTML = "";
+  let shown = 0;
+  for (const p of DATA.pokemon) {
+    if (q && !p.name.includes(q)) continue;
+    if (onlyTodo && p.collected) continue;
+    const div = document.createElement("div");
+    div.className = "cell" + (p.collected ? " done" : "");
+    const nameEl = document.createElement("div");
+    nameEl.className = "name";
+    const nameText = document.createElement("span");
+    nameText.textContent = p.name;
+    nameEl.appendChild(nameText);
+    const metaEl = document.createElement("div");
+    metaEl.className = "meta";
+    metaEl.textContent = p.collected ? `${p.move_count}技` : "未収集";
+    div.append(nameEl, metaEl);
+    grid.appendChild(div);
+    shown++;
+  }
+  $("empty").hidden = shown > 0;
+}
+
+fetch("coverage.json")
+  .then((r) => {
+    if (!r.ok) throw new Error(`coverage.json が見つかりません (HTTP ${r.status})`);
+    return r.json();
+  })
+  .then((d) => {
+    DATA = d;
+    $("progress").style.width = d.percent + "%";
+    $("summary").innerHTML =
+      `<strong>${d.collected}</strong> / ${d.total} 収集済み (${d.percent}%) — 未収集 ${d.uncollected} 種`;
+    render();
+  })
+  .catch((e) => { $("summary").textContent = "coverage.json 読み込み失敗: " + e; });
+
+["q", "onlyTodo"].forEach((id) =>
+  $(id).addEventListener("input", render)
+);
+</script>
+</body>
+</html>
