@@ -11,9 +11,9 @@ PR 検証 (`scripts/validate_collected.py`) が「`collected.json` の技名が�
 |---|---|
 | 出典リポジトリ | [towakey/pokedex](https://github.com/towakey/pokedex) |
 | ライセンス | MIT |
-| 固定 commit | `50ee303b316970bad2dfe47186978860530a7fcf` (2026-05-10) — 正本は build_moves.py の `PINNED_COMMIT` |
+| 固定 commit | `d89793ca662e0f85c41d5306028b5418c78f30de` (2026-06-03) — 正本は build_moves.py の `PINNED_COMMIT` |
 | 生成スクリプト | [`scripts/build_moves.py`](../scripts/build_moves.py) |
-| 件数 | 955 技 |
+| 件数 | 953 技 |
 
 towakey/pokedex の全世代 `waza_list.json` を union した、ゲーム内日本語表記の
 全技名。技名の照合のみに使うため、型・PP は持たず技名だけを保持する。

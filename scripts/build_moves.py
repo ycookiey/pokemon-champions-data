@@ -33,7 +33,7 @@ import _data
 OUT_PATH = Path(__file__).resolve().parents[1] / "data" / "moves.json"
 POKEDEX_URL = "https://github.com/towakey/pokedex"
 # docs/SOURCES.md の固定 commit はこの値を転記すること (ここが正本)。
-PINNED_COMMIT = "50ee303b316970bad2dfe47186978860530a7fcf"
+PINNED_COMMIT = "d89793ca662e0f85c41d5306028b5418c78f30de"
 
 # towakey/pokedex の世代ディレクトリを古い順に並べる。同一技の世代間表記ゆれ
 # (全角/半角・スペース有無) は最新世代の綴りを正規とする (Champions は最新作
