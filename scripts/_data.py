@@ -11,11 +11,14 @@ coverage 生成 (build_coverage) と PR 検証 (validate_collected) の双方に
 from __future__ import annotations
 
 import json
+import unicodedata
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 POKEMON_PATH = ROOT / "data" / "pokemon.json"
 COLLECTED_PATH = ROOT / "data" / "collected.json"
+# 技名マスタ (towakey/pokedex 由来。出自は docs/SOURCES.md、再生成は build_moves.py)。
+MOVES_PATH = ROOT / "data" / "moves.json"
 
 # 収録済みと見なす最低技数。空配列 (0技) は「未収録」であり収録済みにしない。
 MIN_MOVES = 1
@@ -32,6 +35,27 @@ def load_collected(object_pairs_hook=None) -> dict:
         COLLECTED_PATH.read_text(encoding="utf-8"),
         object_pairs_hook=object_pairs_hook,
     )
+
+
+def load_moves() -> list:
+    """技名マスタ moves.json を技名の配列として読む (towakey/pokedex 由来)."""
+    return json.loads(MOVES_PATH.read_text(encoding="utf-8"))
+
+
+def normalize_move_key(name: str) -> str:
+    """技名の表記ゆれ吸収キー (同一技の世代間表記ゆれを同一視する).
+
+    towakey/pokedex は複数世代を収録するため、同じ技が世代により全角/半角
+    (`１０まんボルト`↔`10まんボルト`)・スペース有無 (`クロスポイズン`↔`クロス ポイズン`)
+    で揺れる。これらを潰したキーで「実質同一の技」を判定する。マスタは群ごとに
+    正規表記 1 件へ集約し、collected 側の非正規表記はこのキーで弾く。
+
+    ひらがな↔カタカナのカナ種の違い (`ねこにこばん`↔`ネコにこばん`) は、別の正規
+    表記として両方残す (公式綴りが世代で変わった事例であり、誤って別技を併合する
+    リスクも避ける)。
+    """
+    s = unicodedata.normalize("NFKC", name)
+    return s.replace(" ", "").replace("　", "")
 
 
 def is_collected(moves: object) -> bool:
