@@ -15,7 +15,7 @@
 
 Git の操作に慣れている場合は直接どうぞ。
 
-1. `data/collected.json` に `"ポケモン名": [技名...]` を追記します（キー順は [収録対象一覧](data/pokemon.json) と同じ並びに保つと、自動取込の出力と一致し PR の衝突を避けやすいです）。
+1. `data/collected.jsonl` に `{"ポケモン名": [技名...]}` の行を追記します（[収録対象一覧](data/pokemon.json) と同じ順に並べると、自動取込の出力と一致して衝突しにくくなります）。
 2. Pull Request を作成します。CI（`scripts/validate_collected.py`）が下記の内容を検証します。
 
 ## 検証される内容

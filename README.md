@@ -7,7 +7,7 @@
 GitHub Pages で公開（収録済み / 未収録を一覧・検索・フィルタ）:
 **https://ycookiey.github.io/pokemon-champions-data/**
 
-`data/collected.json` が更新されると、CI が収録状況を再生成して Pages を更新する。**録画前にこのページで未収録のポケモンを確認**すれば、重複録画を避けられる。
+`data/collected.jsonl` が更新されると、CI が収録状況を再生成して Pages を更新する。**録画前にこのページで未収録のポケモンを確認**すれば、重複録画を避けられる。
 
 ## コントリビューション
 
@@ -17,12 +17,12 @@ GitHub Pages で公開（収録済み / 未収録を一覧・検索・フィル�
 
 ```
 data/pokemon.json             収録対象 = Champions 実装ポケモン名 (210種)
-data/collected.json           収録済み技データ {ポケモン名: [技名...]}
+data/collected.jsonl          収録済み技データ (1 行 = 1 ポケモン {名前: [技名...]})
 data/moves.json               技名マスタ (towakey/pokedex 由来の全技名。PR 検証に使用)
 scripts/build_coverage.py     collected vs 収録対象 → site/coverage.json 生成
 scripts/build_moves.py        towakey/pokedex から moves.json を再生成
 scripts/validate_collected.py PR 検証 (収録対象一致・形式・技名がマスタに実在)
-scripts/ingest_issue.py       提出 issue の JSON を検証し collected.json へマージ
+scripts/ingest_issue.py       提出 issue の JSON を検証し collected.jsonl へマージ
 scripts/_data.py              data 読込と検証基準の共有 (validate と ingest が参照)
 site/index.html               ステータスページ (coverage.json を可視化)
 docs/SOURCES.md               各データの出自・生成方法・ライセンス

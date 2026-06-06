@@ -1,6 +1,6 @@
 """towakey/pokedex (MIT) の waza_list.json から技名マスタ data/moves.json を生成する.
 
-PR 検証 (validate_collected.py) が「collected.json の技名が実在する正規名か」を
+PR 検証 (validate_collected.py) が「collected.jsonl の技名が実在する正規名か」を
 照合するための技名一覧を作る。公開リポジトリ towakey/pokedex の各世代
 `waza_list.json` を union した、ゲーム内日本語表記の**全技名のソート済み配列**。
 

@@ -1,7 +1,7 @@
 """収録状況 coverage.json を生成する.
 
 収録対象一覧 (data/pokemon.json = Champions 実装ポケモン名の配列) と収録済み
-(data/collected.json = {ポケモン名: [技名...]}) を突合し、各ポケモンの収録状況を
+(data/collected.jsonl = 1 行 = 1 ポケモン {ポケモン名: [技名...]}) を突合し、各ポケモンの収録状況を
 site/coverage.json に出力する。GitHub Pages のステータスページがこれを読んで可視化する。
 
 収録キーはポケモン名。技プールが個別に異なるフォーム (地方フォーム等) は

@@ -19,5 +19,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # ランナー組み込みの python3 を使う (標準ライブラリのみ依存、setup 不要)
-      - name: Validate collected.json (収録対象一覧との一致・形式・重複)
+      - name: Validate collected.jsonl (収録対象一覧との一致・形式・重複)
         run: python3 scripts/validate_collected.py

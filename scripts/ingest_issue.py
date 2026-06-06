@@ -1,15 +1,15 @@
-"""提出 issue の本文から技データを取込み、collected.json へマージする (Action で実行).
+"""提出 issue の本文から技データを取込み、collected.jsonl へマージする (Action で実行).
 
 Issue Form (.github/ISSUE_TEMPLATE/collect.yml) に貼られた collector 出力 JSON
 ({ポケモン名: [技名...]}) を本文から抽出し、収録対象一覧 pokemon.json・技名マスタ
-moves.json で検証してから data/collected.json へマージする。検証は PR 検証
+moves.json で検証してから data/collected.jsonl へマージする。検証は PR 検証
 (validate_collected.py) と同一の _data.validate_collected_dict を使うので、取込を
 通ったデータは PR の CI でも必ず通る (基準のズレによる後段失敗を防ぐ)。
 
 入力:
     環境変数 ISSUE_BODY (issue 本文)。無ければ argv[1] のファイルから読む (ローカル実行用)。
 出力:
-    成功時のみ data/collected.json を書き換える。判定と人間向けサマリ (PR 本文 / issue
+    成功時のみ data/collected.jsonl を書き換える。判定と人間向けサマリ (PR 本文 / issue
     コメントに使う markdown) を出力ディレクトリ (環境変数 INGEST_OUT、既定 ingest_out/)
     の result.json / summary.md に書く。終了コードは成功 0 / 検証失敗・解析不能 1。
 
@@ -78,17 +78,15 @@ def _merge(current: dict, incoming: dict, order: list) -> tuple[dict, list, list
 
 
 def _dumps_collected(d: dict) -> str:
-    """collected.json を 1 ポケモン 1 行で書き出す (技配列はその行にコンパクト出力).
+    """collected.jsonl を 1 行 1 ポケモン ({名前: [技...]}) で書き出す.
 
-    追加・更新・並べ替えが 1 行単位の差分になり、レコード境界をまたぐ行差分のズレ
-    (共有技や構造行で誤ってアンカーされ隣のポケモンに差分が滲む) を原理的に防ぐ。
-    json.loads で読めるので validate/build 側は従来どおり。
+    行が独立するので追加・更新・並べ替えが 1 行単位の差分になり、JSON object の
+    「最後の要素だけカンマ無し」に起因する差分ノイズ (末尾が伸びると旧・最終行が
+    丸ごと再表示される) も出ない。各行は json.loads で読める。
     """
-    lines = [
-        f"  {json.dumps(k, ensure_ascii=False)}: {json.dumps(v, ensure_ascii=False)}"
-        for k, v in d.items()
-    ]
-    return "{\n" + ",\n".join(lines) + "\n}\n"
+    return "".join(
+        json.dumps({k: v}, ensure_ascii=False) + "\n" for k, v in d.items()
+    )
 
 
 def _write_outputs(out_dir: Path, result: dict, summary_md: str) -> None:
