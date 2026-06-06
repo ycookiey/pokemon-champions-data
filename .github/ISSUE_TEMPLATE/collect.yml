@@ -1,0 +1,33 @@
+name: 技データの提出
+description: 録画から収集した技データを提出します（自動で検証し PR を作成します）
+title: "[収集] "
+labels: ["collect"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        収集ツール [ch-data-collector](https://github.com/ycookiey/ch-data-collector) で
+        出力した JSON（`{ポケモン名: [技名...]}`）を貼り付けてください。送信すると自動で
+        検証し、問題なければデータ追加の Pull Request を作成します。
+
+        - 重複録画を避けるため、先に [収録状況](https://ycookiey.github.io/pokemon-champions-data/) で未収録を確認してください。
+        - ポケモン名は収録対象一覧の表記に合わせてください（collector の出力はこの表記へ正規化済みです）。
+  - type: textarea
+    id: data
+    attributes:
+      label: 収集データ (JSON)
+      description: collector が出力した result.json の中身をそのまま貼り付けてください。
+      placeholder: |
+        {
+          "ピカチュウ": ["10まんボルト", "でんこうせっか", "..."]
+        }
+      render: json
+    validations:
+      required: true
+  - type: checkboxes
+    id: license
+    attributes:
+      label: ライセンス
+      options:
+        - label: このデータを CC0 1.0（パブリックドメイン献納）で提供することに同意します。
+          required: true

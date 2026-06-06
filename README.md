@@ -22,9 +22,12 @@ data/moves.json               技名マスタ (towakey/pokedex 由来の全技�
 scripts/build_coverage.py     collected vs 収録対象 → site/coverage.json 生成
 scripts/build_moves.py        towakey/pokedex から moves.json を再生成
 scripts/validate_collected.py PR 検証 (収録対象一致・形式・技名がマスタに実在)
+scripts/ingest_issue.py       提出 issue の JSON を検証し collected.json へマージ
+scripts/_data.py              data 読込と検証基準の共有 (validate と ingest が参照)
 site/index.html               ステータスページ (coverage.json を可視化)
 docs/SOURCES.md               各データの出自・生成方法・ライセンス
-.github/workflows/            CI: PR=validate / main マージ=coverage 再生成→Pages deploy
+.github/ISSUE_TEMPLATE/        技データ提出フォーム (collect.yml)
+.github/workflows/            CI: 提出 issue=取込→PR / PR=validate / main マージ=coverage 再生成→Pages deploy
 ```
 
 収録対象は、個別に技プールが異なるポケモンのみとする。フォームが違うだけで覚える技が共通しているポケモン（メガシンカ・サイズ違い等）は除く。
