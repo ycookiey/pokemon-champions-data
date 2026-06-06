@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import unicodedata
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -61,3 +62,55 @@ def normalize_move_key(name: str) -> str:
 def is_collected(moves: object) -> bool:
     """収録済み判定: 技を MIN_MOVES 件以上持つ文字列リストか."""
     return isinstance(moves, list) and len(moves) >= MIN_MOVES
+
+
+def validate_collected_dict(
+    collected: object, names: set, known_moves: set
+) -> list:
+    """{ポケモン名: [技名...]} を収録対象一覧・技名マスタで検証しエラー文字列の配列を返す.
+
+    PR 検証 (validate_collected.py) と issue 取込 (ingest_issue.py) が同一基準で
+    検証するための唯一の情報源。基準がズレると「取込は通過したが PR マージ時の
+    validate で落ちる」不整合が起きるため共有する。CI はランナー組み込みの python3
+    (stdlib のみ) で走るので、ここも stdlib だけに保つ。
+
+    検査: オブジェクト形式 / 各キーが収録対象一覧に実在 / 値が文字列配列 /
+    技を MIN_MOVES 件以上持つ / 空・前後空白なし / 重複なし / 技名がマスタに実在。
+    """
+    if not isinstance(collected, dict):
+        return ["{ポケモン名: [技名...]} のオブジェクトである必要があります"]
+
+    errors: list = []
+    for key, moves in collected.items():
+        if key not in names:
+            errors.append(
+                f"収録対象一覧 (data/pokemon.json) に無いポケモン名: {key!r} "
+                "— 表記が収録対象一覧と一致しているか確認してください"
+            )
+        if not isinstance(moves, list) or not all(
+            isinstance(m, str) for m in moves
+        ):
+            errors.append(f"{key!r} の技リストは文字列の配列である必要があります")
+            continue
+        if len(moves) < MIN_MOVES:
+            errors.append(
+                f"{key!r} の技が {len(moves)} 件しかありません "
+                f"— 収録済みは技を {MIN_MOVES} 件以上必要です (空配列は不可)"
+            )
+            continue
+        blank = sum(1 for m in moves if not m.strip())
+        if blank:
+            errors.append(f"{key!r} に空または空白のみの技名が {blank} 件あります")
+        spaced = sorted(m for m in moves if m != m.strip())
+        if spaced:
+            errors.append(f"{key!r} に前後空白付きの技名があります: {spaced}")
+        dups = sorted(m for m, c in Counter(moves).items() if c > 1)
+        if dups:
+            errors.append(f"{key!r} に重複技があります: {dups}")
+        unknown = sorted(set(m for m in moves if m.strip()) - known_moves)
+        if unknown:
+            errors.append(
+                f"{key!r} に技名マスタ (data/moves.json) に無い技名があります: "
+                f"{unknown} — OCR 誤読・タイポ・非正規表記の可能性。正規名へ修正してください"
+            )
+    return errors

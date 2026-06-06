@@ -101,43 +101,8 @@ def main() -> int:
         print(e)
         return 1
 
-    if not isinstance(collected, dict):
-        print("collected.json はオブジェクト {ポケモン名: [技名...]} である必要があります")
-        return 1
-
-    errors: list = []
-    for key, moves in collected.items():
-        if key not in names:
-            errors.append(
-                f"収録対象一覧 (data/pokemon.json) に無いポケモン名: {key!r} "
-                "— 表記が収録対象一覧と一致しているか確認してください"
-            )
-        if not isinstance(moves, list) or not all(
-            isinstance(m, str) for m in moves
-        ):
-            errors.append(f"{key!r} の技リストは文字列の配列である必要があります")
-            continue
-        if len(moves) < _data.MIN_MOVES:
-            errors.append(
-                f"{key!r} の技が {len(moves)} 件しかありません "
-                f"— 収録済みは技を {_data.MIN_MOVES} 件以上必要です (空配列は不可)"
-            )
-            continue
-        blank = sum(1 for m in moves if not m.strip())
-        if blank:
-            errors.append(f"{key!r} に空または空白のみの技名が {blank} 件あります")
-        spaced = sorted(m for m in moves if m != m.strip())
-        if spaced:
-            errors.append(f"{key!r} に前後空白付きの技名があります: {spaced}")
-        dups = sorted(m for m, c in Counter(moves).items() if c > 1)
-        if dups:
-            errors.append(f"{key!r} に重複技があります: {dups}")
-        unknown = sorted(set(m for m in moves if m.strip()) - known_moves)
-        if unknown:
-            errors.append(
-                f"{key!r} に技名マスタ (data/moves.json) に無い技名があります: "
-                f"{unknown} — OCR 誤読・タイポ・非正規表記の可能性。正規名へ修正してください"
-            )
+    # ポケモン単位の検証は ingest_issue.py と共有 (基準を一致させる)
+    errors = _data.validate_collected_dict(collected, names, known_moves)
 
     if errors:
         print(f"検証失敗 ({len(errors)} 件):")

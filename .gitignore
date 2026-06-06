@@ -5,6 +5,9 @@ __pycache__/
 # CI 生成物 (build_coverage.py が生成し Pages deploy 時に作る。コミット不要)
 /site/coverage.json
 
+# ingest_issue.py の出力 (Action ランナー上の一時物。コミット不要)
+/ingest_out/
+
 # 動画 / 一時物
 *.mp4
 *.mov

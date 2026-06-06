@@ -1,0 +1,69 @@
+name: Ingest submission
+
+# 「技データの提出」issue (label: collect) を起点に、本文の JSON を検証して
+# data/collected.json へマージし PR を自動作成する。検証は scripts/ingest_issue.py
+# が PR 検証 (validate_collected.py) と共有の基準 (_data.validate_collected_dict) で
+# 行うため、取込を通ったデータは PR の CI でも必ず通る。
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+# collected.json への同時書込みを直列化 (複数 issue の競合を防ぐ)
+concurrency:
+  group: ingest-collected
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    if: contains(github.event.issue.labels.*.name, 'collect')
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # issue 本文は env 経由で渡す (run へ直接展開するとスクリプトインジェクションの恐れ)
+      - name: Ingest & validate
+        id: ingest
+        continue-on-error: true
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: python3 scripts/ingest_issue.py
+
+      # 検証失敗: エラー内容を issue にコメントしてジョブを失敗で終える
+      - name: Comment failure
+        if: steps.ingest.outcome == 'failure'
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --body-file ingest_out/summary.md
+          exit 1
+
+      # 成功: 変更が無ければ (既収録と同一) PR を作らず通知して終了
+      - name: Commit, push, open PR
+        if: steps.ingest.outcome == 'success'
+        run: |
+          if git diff --quiet -- data/collected.json; then
+            gh issue comment "$ISSUE_NUMBER" --body "提出データは既に収録済みの内容と同一でした (変更なし)。"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BRANCH="collect/issue-${ISSUE_NUMBER}"
+          git checkout -b "$BRANCH"
+          git add data/collected.json
+          git commit -m "data: issue #${ISSUE_NUMBER} の技データを取込"
+          git push -f origin "$BRANCH"
+          if gh pr view "$BRANCH" --json url -q .url >/tmp/prurl 2>/dev/null; then
+            URL=$(cat /tmp/prurl)   # 既存 PR は push で自動更新済み
+          else
+            URL=$(gh pr create --base main --head "$BRANCH" \
+              --title "収集データ追加 (issue #${ISSUE_NUMBER})" \
+              --body-file ingest_out/summary.md)
+          fi
+          gh issue comment "$ISSUE_NUMBER" --body "取込に成功しました。PR を作成・更新しました: ${URL}"
