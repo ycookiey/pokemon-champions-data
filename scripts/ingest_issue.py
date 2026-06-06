@@ -77,6 +77,20 @@ def _merge(current: dict, incoming: dict, order: list) -> tuple[dict, list, list
     return merged, new_names, updated_names
 
 
+def _dumps_collected(d: dict) -> str:
+    """collected.json を 1 ポケモン 1 行で書き出す (技配列はその行にコンパクト出力).
+
+    追加・更新・並べ替えが 1 行単位の差分になり、レコード境界をまたぐ行差分のズレ
+    (共有技や構造行で誤ってアンカーされ隣のポケモンに差分が滲む) を原理的に防ぐ。
+    json.loads で読めるので validate/build 側は従来どおり。
+    """
+    lines = [
+        f"  {json.dumps(k, ensure_ascii=False)}: {json.dumps(v, ensure_ascii=False)}"
+        for k, v in d.items()
+    ]
+    return "{\n" + ",\n".join(lines) + "\n}\n"
+
+
 def _write_outputs(out_dir: Path, result: dict, summary_md: str) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "result.json").write_text(
@@ -120,9 +134,7 @@ def main() -> int:
 
     current = _data.load_collected()
     merged, new_names, updated_names = _merge(current, incoming, names_list)
-    _data.COLLECTED_PATH.write_text(
-        json.dumps(merged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-    )
+    _data.COLLECTED_PATH.write_text(_dumps_collected(merged), encoding="utf-8")
 
     lines = [f"- {n} ({len(incoming[n])} 技)" for n in new_names]
     ups = [f"- {n} ({len(incoming[n])} 技) ※既存を更新" for n in updated_names]

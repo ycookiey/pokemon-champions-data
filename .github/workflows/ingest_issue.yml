@@ -62,8 +62,10 @@ jobs:
           if gh pr view "$BRANCH" --json url -q .url >/tmp/prurl 2>/dev/null; then
             URL=$(cat /tmp/prurl)   # 既存 PR は push で自動更新済み
           else
+            # PR マージで提出 issue が自動クローズされるよう Closes を付ける
+            printf '%s\n\nCloses #%s\n' "$(cat ingest_out/summary.md)" "$ISSUE_NUMBER" > ingest_out/pr_body.md
             URL=$(gh pr create --base main --head "$BRANCH" \
               --title "収集データ追加 (issue #${ISSUE_NUMBER})" \
-              --body-file ingest_out/summary.md)
+              --body-file ingest_out/pr_body.md)
           fi
           gh issue comment "$ISSUE_NUMBER" --body "取込に成功しました。PR を作成・更新しました: ${URL}"
