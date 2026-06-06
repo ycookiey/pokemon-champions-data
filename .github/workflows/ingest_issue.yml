@@ -1,7 +1,7 @@
 name: Ingest submission
 
 # 「技データの提出」issue (label: collect) を起点に、本文の JSON を検証して
-# data/collected.json へマージし PR を自動作成する。検証は scripts/ingest_issue.py
+# data/collected.jsonl へマージし PR を自動作成する。検証は scripts/ingest_issue.py
 # が PR 検証 (validate_collected.py) と共有の基準 (_data.validate_collected_dict) で
 # 行うため、取込を通ったデータは PR の CI でも必ず通る。
 
@@ -14,7 +14,7 @@ permissions:
   pull-requests: write
   issues: write
 
-# collected.json への同時書込みを直列化 (複数 issue の競合を防ぐ)
+# collected.jsonl への同時書込みを直列化 (複数 issue の競合を防ぐ)
 concurrency:
   group: ingest-collected
   cancel-in-progress: false
@@ -48,7 +48,7 @@ jobs:
       - name: Commit, push, open PR
         if: steps.ingest.outcome == 'success'
         run: |
-          if git diff --quiet -- data/collected.json; then
+          if git diff --quiet -- data/collected.jsonl; then
             gh issue comment "$ISSUE_NUMBER" --body "提出データは既に収録済みの内容と同一でした (変更なし)。"
             exit 0
           fi
@@ -56,7 +56,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           BRANCH="collect/issue-${ISSUE_NUMBER}"
           git checkout -b "$BRANCH"
-          git add data/collected.json
+          git add data/collected.jsonl
           git commit -m "data: issue #${ISSUE_NUMBER} の技データを取込"
           git push -f origin "$BRANCH"
           if gh pr view "$BRANCH" --json url -q .url >/tmp/prurl 2>/dev/null; then

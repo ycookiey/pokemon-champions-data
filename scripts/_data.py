@@ -1,7 +1,7 @@
 """data/ の読込と「収録済み」判定を一元化する共通モジュール.
 
 build_coverage.py と validate_collected.py が、同じパス・同じ「収録済み」基準を
-参照するための唯一の情報源。収録対象一覧 pokemon.json と収録 collected.json の読込、
+参照するための唯一の情報源。収録対象一覧 pokemon.json と収録 collected.jsonl の読込、
 および「収録済み = 技を MIN_MOVES 件以上持つ」という判定をここに集約する。
 
 基準を変える (例: 最低技数を上げる) ときはこのファイルだけを直せば、
@@ -17,7 +17,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 POKEMON_PATH = ROOT / "data" / "pokemon.json"
-COLLECTED_PATH = ROOT / "data" / "collected.json"
+# 収録データは 1 行 1 ポケモン ({名前: [技...]})。行が独立するので追加・削除・
+# 並べ替えが 1 行差分になり、末尾要素のカンマ揺れによる差分ノイズが出ない。
+COLLECTED_PATH = ROOT / "data" / "collected.jsonl"
 # 技名マスタ (towakey/pokedex 由来。出自は docs/SOURCES.md、再生成は build_moves.py)。
 MOVES_PATH = ROOT / "data" / "moves.json"
 
@@ -30,12 +32,40 @@ def load_pokemon() -> list:
     return json.loads(POKEMON_PATH.read_text(encoding="utf-8"))
 
 
-def load_collected(object_pairs_hook=None) -> dict:
-    """収録 collected.json を {ポケモン名: [技名...]} として読む."""
-    return json.loads(
-        COLLECTED_PATH.read_text(encoding="utf-8"),
-        object_pairs_hook=object_pairs_hook,
-    )
+def _reject_dup_pairs(pairs: list) -> dict:
+    """1 行の JSON オブジェクト内の重複キーを弾く (json 既定の後勝ちで黙って捨てるのを防ぐ)."""
+    seen: set = set()
+    for key, _ in pairs:
+        if key in seen:
+            raise ValueError(f"同じポケモン名が複数あります: {key!r}")
+        seen.add(key)
+    return dict(pairs)
+
+
+def load_collected() -> dict:
+    """収録 collected.jsonl を {ポケモン名: [技名...]} として読む (1 行 1 ポケモン).
+
+    各行は {名前: [技...]} の単一オブジェクト。行内・行間どちらの重複キーも ValueError
+    で弾く (後勝ちで黙って欠落するのを防ぐ)。空行は無視する。
+    """
+    collected: dict = {}
+    for lineno, raw in enumerate(
+        COLLECTED_PATH.read_text(encoding="utf-8").splitlines(), 1
+    ):
+        line = raw.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line, object_pairs_hook=_reject_dup_pairs)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"collected.jsonl の {lineno} 行目が不正な JSON です: {e}")
+        for key, value in obj.items():
+            if key in collected:
+                raise ValueError(
+                    f"collected.jsonl にキー重複があります: {key!r} ({lineno} 行目)"
+                )
+            collected[key] = value
+    return collected
 
 
 def load_moves() -> list:

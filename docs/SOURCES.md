@@ -4,7 +4,7 @@
 
 ## data/moves.json — 技名マスタ
 
-PR 検証 (`scripts/validate_collected.py`) が「`collected.json` の技名が実在する
+PR 検証 (`scripts/validate_collected.py`) が「`collected.jsonl` の技名が実在する
 正規名か」を照合するための、ゲーム内日本語表記の**全技名のソート済み配列**。
 
 | 項目 | 内容 |

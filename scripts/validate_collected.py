@@ -1,9 +1,9 @@
-"""collected.json と収録対象一覧 pokemon.json を検証する (CI で PR 時に実行).
+"""collected.jsonl と収録対象一覧 pokemon.json を検証する (CI で PR 時に実行).
 
 検査項目:
   - 収録対象一覧 pokemon.json が文字列の配列で、重複名・空/空白のみ・前後空白が無い
   - 技名マスタ moves.json が文字列の配列で、重複・空/空白のみ・前後空白が無い
-  - collected.json が {ポケモン名: [技名...]} のオブジェクトである
+  - collected.jsonl が読め、ポケモン名の重複が無い ({名前: [技...]} の JSONL)
   - 各キーが収録対象一覧 pokemon.json の名前と完全一致する
     (タイポ・表記揺れ・収録対象外フォームを弾く)
   - 各値が文字列の配列で、技を MIN_MOVES 件以上持つ (空配列を弾く)
@@ -23,16 +23,6 @@ from __future__ import annotations
 from collections import Counter
 
 import _data
-
-
-def _reject_duplicate_keys(pairs: list) -> dict:
-    """JSON オブジェクトの重複キーを弾く (後勝ちで黙って捨てられるのを防ぐ)."""
-    seen: set = set()
-    for key, _ in pairs:
-        if key in seen:
-            raise ValueError(f"collected.json にキー重複があります: {key!r}")
-        seen.add(key)
-    return dict(pairs)
 
 
 def _validate_list_master(items: object, label: str) -> list:
@@ -96,7 +86,7 @@ def main() -> int:
     known_moves = set(moves_list)
 
     try:
-        collected = _data.load_collected(object_pairs_hook=_reject_duplicate_keys)
+        collected = _data.load_collected()  # 重複キー・不正行は ValueError
     except ValueError as e:
         print(e)
         return 1
