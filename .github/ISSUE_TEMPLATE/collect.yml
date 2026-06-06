@@ -1,6 +1,6 @@
 name: 技データの提出
 description: 録画から収集した技データを提出します（自動で検証し PR を作成します）
-title: "[収集] "
+title: "技データの提出"
 labels: ["collect"]
 body:
   - type: markdown
