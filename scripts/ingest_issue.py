@@ -59,22 +59,25 @@ def _reject_duplicate_keys(pairs: list) -> dict:
     return dict(pairs)
 
 
-def _merge(current: dict, incoming: dict, order: list) -> tuple[dict, list, list]:
+def _merge(current: dict, incoming: dict, order: list) -> tuple[dict, list, list, list]:
     """incoming を current にマージし、キーを母集合 order の並びに揃えて返す.
 
     既存と同名は更新 (置換) する。並び順を毎回 order (pokemon.json) に合わせることで、
     master・手動編集・自動取込が単一の正準順に一致し、差分の散らばりとマージ衝突を防ぐ。
-    新規・更新の名前リストも返し、PR 本文で「黙って上書きした」状態にならないよう明示する。
+    新規・更新・既存と同一 (no-op) の名前リストも返し、PR 本文で「黙って上書きした」
+    状態にも「変わらない更新が水増しで載る」状態にもならないようにする。
+    更新判定は順序込みで比較し、collected.jsonl の実差分と一致させる。
     """
     new_names = [k for k in incoming if k not in current]
-    updated_names = [k for k in incoming if k in current]
+    updated_names = [k for k in incoming if k in current and current[k] != incoming[k]]
+    unchanged_names = [k for k in incoming if k in current and current[k] == incoming[k]]
     combined = dict(current)
     combined.update(incoming)
     index = {name: i for i, name in enumerate(order)}
     # 母集合順に並べる。order に無いキーは検証で弾かれるはずだが、念のため末尾へ安定配置。
     ordered = sorted(combined, key=lambda k: (index.get(k, len(order)), k))
     merged = {k: combined[k] for k in ordered}
-    return merged, new_names, updated_names
+    return merged, new_names, updated_names, unchanged_names
 
 
 def _dumps_collected(d: dict) -> str:
@@ -131,21 +134,23 @@ def main() -> int:
         return 1
 
     current = _data.load_collected()
-    merged, new_names, updated_names = _merge(current, incoming, names_list)
+    merged, new_names, updated_names, unchanged_names = _merge(current, incoming, names_list)
     _data.COLLECTED_PATH.write_text(_dumps_collected(merged), encoding="utf-8")
 
     lines = [f"- {n} ({len(incoming[n])} 技)" for n in new_names]
     ups = [f"- {n} ({len(incoming[n])} 技) ※既存を更新" for n in updated_names]
     md_parts = ["### 取込成功\n"]
     if new_names:
-        md_parts.append("\n**新規収録**\n\n" + "\n".join(lines) + "\n")
+        md_parts.append(f"\n**新規収録 ({len(new_names)} 件)**\n\n" + "\n".join(lines) + "\n")
     if updated_names:
-        md_parts.append("\n**更新 (既存を上書き)**\n\n" + "\n".join(ups) + "\n")
+        md_parts.append(f"\n**更新 (既存を上書き) ({len(updated_names)} 件)**\n\n" + "\n".join(ups) + "\n")
+    if unchanged_names:
+        md_parts.append(f"\n既存と同一のため更新一覧から除外: {len(unchanged_names)} 件\n")
     summary_md = "".join(md_parts)
     print(summary_md)
     _write_outputs(
         out_dir,
-        {"ok": True, "new": new_names, "updated": updated_names},
+        {"ok": True, "new": new_names, "updated": updated_names, "unchanged": unchanged_names},
         summary_md,
     )
     return 0
