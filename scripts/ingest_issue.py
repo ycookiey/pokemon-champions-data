@@ -66,13 +66,25 @@ def _merge(current: dict, incoming: dict, order: list) -> tuple[dict, list, list
     master・手動編集・自動取込が単一の正準順に一致し、差分の散らばりとマージ衝突を防ぐ。
     新規・更新・既存と同一 (no-op) の名前リストも返し、PR 本文で「黙って上書きした」
     状態にも「変わらない更新が水増しで載る」状態にもならないようにする。
-    更新判定は順序込みで比較し、collected.jsonl の実差分と一致させる。
+    技集合が同じで配列順だけ異なるケースは「実質的な更新ではない」ため、現行を保持し
+    unchanged 扱いとする (収集ツールの fuzzy match や閾値変更で発見順が揺れたぶんを
+    PR 差分に出さないため)。
     """
     new_names = [k for k in incoming if k not in current]
-    updated_names = [k for k in incoming if k in current and current[k] != incoming[k]]
-    unchanged_names = [k for k in incoming if k in current and current[k] == incoming[k]]
+    updated_names = [
+        k for k in incoming
+        if k in current and set(current[k]) != set(incoming[k])
+    ]
+    unchanged_names = [
+        k for k in incoming
+        if k in current and set(current[k]) == set(incoming[k])
+    ]
     combined = dict(current)
-    combined.update(incoming)
+    # 技集合が同じ (順序差のみ) ケースは current を保持し PR 差分を出さない.
+    for k, v in incoming.items():
+        if k in current and set(current[k]) == set(v):
+            continue
+        combined[k] = v
     index = {name: i for i, name in enumerate(order)}
     # 母集合順に並べる。order に無いキーは検証で弾かれるはずだが、念のため末尾へ安定配置。
     ordered = sorted(combined, key=lambda k: (index.get(k, len(order)), k))

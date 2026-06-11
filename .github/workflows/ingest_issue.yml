@@ -44,26 +44,35 @@ jobs:
           gh issue comment "$ISSUE_NUMBER" --body-file ingest_out/summary.md
           exit 1
 
-      # 成功: 変更が無ければ (既収録と同一) PR を作らず通知して終了
+      # 成功: 変更が無ければ (既収録と同一) PR を作らず通知して終了.
+      # issue 再編集による再走で「順序差のみ → 実差分なし」になった場合は、
+      # 直前の走行で開いていた古い PR (同名ブランチ) を close してブランチを削除する.
       - name: Commit, push, open PR
         if: steps.ingest.outcome == 'success'
         run: |
+          BRANCH="collect/issue-${ISSUE_NUMBER}"
           if git diff --quiet -- data/collected.jsonl; then
-            gh issue comment "$ISSUE_NUMBER" --body "提出データは既に収録済みの内容と同一でした (変更なし)。"
+            if gh pr view "$BRANCH" --json state -q .state >/tmp/prstate 2>/dev/null && [ "$(cat /tmp/prstate)" = "OPEN" ]; then
+              gh pr close "$BRANCH" --delete-branch --comment "再取込で実差分なしのため close しました。"
+              gh issue comment "$ISSUE_NUMBER" --body "提出データは既に収録済みの内容と同一でした (変更なし)。古い PR を close しました。"
+            else
+              gh issue comment "$ISSUE_NUMBER" --body "提出データは既に収録済みの内容と同一でした (変更なし)。"
+            fi
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          BRANCH="collect/issue-${ISSUE_NUMBER}"
           git checkout -b "$BRANCH"
           git add data/collected.jsonl
           git commit -m "data: issue #${ISSUE_NUMBER} の技データを取込"
           git push -f origin "$BRANCH"
+          # PR マージで提出 issue が自動クローズされるよう Closes を付ける
+          printf '%s\n\nCloses #%s\n' "$(cat ingest_out/summary.md)" "$ISSUE_NUMBER" > ingest_out/pr_body.md
           if gh pr view "$BRANCH" --json url -q .url >/tmp/prurl 2>/dev/null; then
-            URL=$(cat /tmp/prurl)   # 既存 PR は push で自動更新済み
+            URL=$(cat /tmp/prurl)
+            # 既存 PR の本文も最新 summary に更新する (再取込で件数や内訳が変わるため)
+            gh pr edit "$BRANCH" --body-file ingest_out/pr_body.md
           else
-            # PR マージで提出 issue が自動クローズされるよう Closes を付ける
-            printf '%s\n\nCloses #%s\n' "$(cat ingest_out/summary.md)" "$ISSUE_NUMBER" > ingest_out/pr_body.md
             URL=$(gh pr create --base main --head "$BRANCH" \
               --title "収集データ追加 (issue #${ISSUE_NUMBER})" \
               --body-file ingest_out/pr_body.md)
