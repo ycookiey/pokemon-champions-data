@@ -9,13 +9,13 @@
 ## ステータスページ
 
 [![収録](https://img.shields.io/endpoint?url=https%3A%2F%2Fycookiey.github.io%2Fpokemon-champions-data%2Fbadge.json&style=for-the-badge)](https://ycookiey.github.io/pokemon-champions-data/)
-[![収録状況を見る](https://img.shields.io/badge/%E2%96%B6%20%E5%8F%8E%E9%8C%B2%E7%8A%B6%E6%B3%81%E3%82%92%E8%A6%8B%E3%82%8B-1B5E20?style=for-the-badge&logo=github)](https://ycookiey.github.io/pokemon-champions-data/)
+[![収録状況を見る](https://img.shields.io/badge/%E2%96%B6%20%E5%8F%8E%E9%8C%B2%E7%8A%B6%E6%B3%81%E3%82%92%E8%A6%8B%E3%82%8B-B71C1C?style=for-the-badge&logo=github)](https://ycookiey.github.io/pokemon-champions-data/)
 
 現在の収録状況と未収録ポケモンはこちらからご確認ください。
 
 ## コントリビューション
 
-[![技データを提出](https://img.shields.io/badge/%E2%96%B6%20%E6%8A%80%E3%83%87%E3%83%BC%E3%82%BF%E3%82%92%E6%8F%90%E5%87%BA-1B5E20?style=for-the-badge&logo=github)](https://github.com/ycookiey/pokemon-champions-data/issues/new?template=collect.yml)
+[![技データを提出](https://img.shields.io/badge/%E2%96%B6%20%E6%8A%80%E3%83%87%E3%83%BC%E3%82%BF%E3%82%92%E6%8F%90%E5%87%BA-B71C1C?style=for-the-badge&logo=github)](https://github.com/ycookiey/pokemon-champions-data/issues/new?template=collect.yml)
 [![提出ガイド](https://img.shields.io/badge/%F0%9F%93%96%20%E6%8F%90%E5%87%BA%E3%82%AC%E3%82%A4%E3%83%89-424242?style=for-the-badge)](CONTRIBUTING.md)
 
 未収録ポケモンの技データ提供を歓迎します。
