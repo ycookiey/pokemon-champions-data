@@ -1,36 +1,34 @@
 # pokemon-champions-data
 
-ポケモンチャンピオンズの技データリポジトリ。収集ツールは [ch-data-collector](https://github.com/ycookiey/ch-data-collector)で、画面録画から自動で技を抽出する。（別リポジトリ・公開準備中）
+[![収録](https://img.shields.io/endpoint?url=https%3A%2F%2Fycookiey.github.io%2Fpokemon-champions-data%2Fbadge.json)](https://ycookiey.github.io/pokemon-champions-data/)
+[![GitHub Pages 公開中](https://img.shields.io/badge/GitHub%20Pages-%E5%85%AC%E9%96%8B%E4%B8%AD-success?logo=github)](https://ycookiey.github.io/pokemon-champions-data/)
+[![収集ツール](https://img.shields.io/badge/%E5%8F%8E%E9%9B%86%E3%83%84%E3%83%BC%E3%83%AB-ch--data--collector-blue?logo=github)](https://github.com/ycookiey/ch-data-collector)
 
-## データ収録状況
+ポケモンチャンピオンズのデータセット。現時点では各ポケモンが習得する技を対象とする。
 
-GitHub Pages で公開（収録済み / 未収録を一覧・検索・フィルタ）:
-**https://ycookiey.github.io/pokemon-champions-data/**
+## ステータスページ
 
-`data/collected.jsonl` が更新されると、CI が収録状況を再生成して Pages を更新する。**録画前にこのページで未収録のポケモンを確認**すれば、重複録画を避けられる。
+[![収録](https://img.shields.io/endpoint?url=https%3A%2F%2Fycookiey.github.io%2Fpokemon-champions-data%2Fbadge.json&style=for-the-badge)](https://ycookiey.github.io/pokemon-champions-data/)
+[![収録状況を見る](https://img.shields.io/badge/%E2%96%B6%20%E5%8F%8E%E9%8C%B2%E7%8A%B6%E6%B3%81%E3%82%92%E8%A6%8B%E3%82%8B-success?style=for-the-badge&logo=github)](https://ycookiey.github.io/pokemon-champions-data/)
+
+現在の収録状況と未収録ポケモンはこちらからご確認ください。
 
 ## コントリビューション
 
-未収録ポケモンの技データ提供を歓迎します。手順・JSON形式・ポケモン名の表記ルールは [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
+[![技データを提出](https://img.shields.io/badge/%E2%96%B6%20%E6%8A%80%E3%83%87%E3%83%BC%E3%82%BF%E3%82%92%E6%8F%90%E5%87%BA-success?style=for-the-badge&logo=github)](https://github.com/ycookiey/pokemon-champions-data/issues/new?template=collect.yml)
+[![提出ガイド](https://img.shields.io/badge/%F0%9F%93%96%20%E6%8F%90%E5%87%BA%E3%82%AC%E3%82%A4%E3%83%89-blue?style=for-the-badge)](CONTRIBUTING.md)
 
-## 構成
+未収録ポケモンの技データ提供を歓迎します。
 
-```
-data/pokemon.json             収録対象 = Champions 実装ポケモン名 (210種)
-data/collected.jsonl          収録済み技データ (1 行 = 1 ポケモン {名前: [技名...]})
-data/moves.json               技名マスタ (towakey/pokedex 由来の全技名。PR 検証に使用)
-scripts/build_coverage.py     collected vs 収録対象 → site/coverage.json 生成
-scripts/build_moves.py        towakey/pokedex から moves.json を再生成
-scripts/validate_collected.py PR 検証 (収録対象一致・形式・技名がマスタに実在)
-scripts/ingest_issue.py       提出 issue の JSON を検証し collected.jsonl へマージ
-scripts/_data.py              data 読込と検証基準の共有 (validate と ingest が参照)
-site/index.html               ステータスページ (coverage.json を可視化)
-docs/SOURCES.md               各データの出自・生成方法・ライセンス
-.github/ISSUE_TEMPLATE/        技データ提出フォーム (collect.yml)
-.github/workflows/            CI: 提出 issue=取込→PR / PR=validate / main マージ=coverage 再生成→Pages deploy
-```
+## 収録ポリシー
 
-収録対象は、個別に技プールが異なるポケモンのみとする。フォームが違うだけで覚える技が共通しているポケモン（メガシンカ・サイズ違い等）は除く。
+個別に技プールが異なるポケモンのみを収録対象とする。フォームが違うだけで覚える技が共通しているポケモン（メガシンカ・サイズ違い等）は除く。
+
+## Related
+
+[![ch-data-collector](https://img.shields.io/badge/%E2%96%B6%20ch--data--collector-blue?style=for-the-badge&logo=github)](https://github.com/ycookiey/ch-data-collector)
+
+画面録画から技を自動抽出する収集ツール。
 
 ## ライセンスと権利
 

@@ -3,6 +3,7 @@
 収録対象一覧 (data/pokemon.json = Champions 実装ポケモン名の配列) と収録済み
 (data/collected.jsonl = 1 行 = 1 ポケモン {ポケモン名: [技名...]}) を突合し、各ポケモンの収録状況を
 site/coverage.json に出力する。GitHub Pages のステータスページがこれを読んで可視化する。
+README のバッジ向けに site/badge.json (shields.io endpoint 形式) も同時に出力する。
 
 収録キーはポケモン名。技プールが個別に異なるフォーム (地方フォーム等) は
 別名で収録対象一覧に含む (技プールがベースと共通のメガ・サイズ違い等は収録対象一覧から除く)。
@@ -19,6 +20,19 @@ import json
 import _data
 
 OUT_PATH = _data.ROOT / "site" / "coverage.json"
+BADGE_PATH = _data.ROOT / "site" / "badge.json"
+
+
+def _badge_color(percent: float) -> str:
+    if percent >= 90:
+        return "brightgreen"
+    if percent >= 60:
+        return "green"
+    if percent >= 30:
+        return "yellow"
+    if percent >= 10:
+        return "orange"
+    return "red"
 
 
 def main() -> int:
@@ -38,11 +52,12 @@ def main() -> int:
 
     total = len(entries)
     done = sum(1 for e in entries if e["collected"])
+    percent = round(100 * done / total, 1) if total else 0.0
     coverage = {
         "total": total,
         "collected": done,
         "uncollected": total - done,
-        "percent": round(100 * done / total, 1) if total else 0.0,
+        "percent": percent,
         "pokemon": entries,
     }
 
@@ -51,7 +66,20 @@ def main() -> int:
         json.dumps(coverage, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
-    print(f"coverage: {done}/{total} ({coverage['percent']}%) -> {OUT_PATH}")
+
+    badge = {
+        "schemaVersion": 1,
+        "label": "収録",
+        "message": f"{done}/{total} ({percent}%)",
+        "color": _badge_color(percent),
+    }
+    BADGE_PATH.write_text(
+        json.dumps(badge, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+    print(f"coverage: {done}/{total} ({percent}%) -> {OUT_PATH}")
+    print(f"badge: {badge['message']} ({badge['color']}) -> {BADGE_PATH}")
     return 0
 
 
