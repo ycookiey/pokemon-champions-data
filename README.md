@@ -1,8 +1,8 @@
 # pokemon-champions-data
 
 [![収録](https://img.shields.io/endpoint?url=https%3A%2F%2Fycookiey.github.io%2Fpokemon-champions-data%2Fbadge.json)](https://ycookiey.github.io/pokemon-champions-data/)
-[![GitHub Pages 公開中](https://img.shields.io/badge/GitHub%20Pages-%E5%85%AC%E9%96%8B%E4%B8%AD-1B5E20?logo=github)](https://ycookiey.github.io/pokemon-champions-data/)
-[![収集ツール](https://img.shields.io/badge/%E5%8F%8E%E9%9B%86%E3%83%84%E3%83%BC%E3%83%AB-ch--data--collector-0D47A1?logo=github)](https://github.com/ycookiey/ch-data-collector)
+[![GitHub Pages 公開中](https://img.shields.io/badge/GitHub%20Pages-%E5%85%AC%E9%96%8B%E4%B8%AD-424242?logo=github)](https://ycookiey.github.io/pokemon-champions-data/)
+[![収集ツール](https://img.shields.io/badge/%E5%8F%8E%E9%9B%86%E3%83%84%E3%83%BC%E3%83%AB-ch--data--collector-424242?logo=github)](https://github.com/ycookiey/ch-data-collector)
 
 ポケモンチャンピオンズのデータセット。現時点では各ポケモンが習得する技を対象とする。
 
@@ -16,7 +16,7 @@
 ## コントリビューション
 
 [![技データを提出](https://img.shields.io/badge/%E2%96%B6%20%E6%8A%80%E3%83%87%E3%83%BC%E3%82%BF%E3%82%92%E6%8F%90%E5%87%BA-1B5E20?style=for-the-badge&logo=github)](https://github.com/ycookiey/pokemon-champions-data/issues/new?template=collect.yml)
-[![提出ガイド](https://img.shields.io/badge/%F0%9F%93%96%20%E6%8F%90%E5%87%BA%E3%82%AC%E3%82%A4%E3%83%89-0D47A1?style=for-the-badge)](CONTRIBUTING.md)
+[![提出ガイド](https://img.shields.io/badge/%F0%9F%93%96%20%E6%8F%90%E5%87%BA%E3%82%AC%E3%82%A4%E3%83%89-424242?style=for-the-badge)](CONTRIBUTING.md)
 
 未収録ポケモンの技データ提供を歓迎します。
 
@@ -26,7 +26,7 @@
 
 ## Related
 
-[![ch-data-collector](https://img.shields.io/badge/%E2%96%B6%20ch--data--collector-0D47A1?style=for-the-badge&logo=github)](https://github.com/ycookiey/ch-data-collector)
+[![ch-data-collector](https://img.shields.io/badge/%E2%96%B6%20ch--data--collector-424242?style=for-the-badge&logo=github)](https://github.com/ycookiey/ch-data-collector)
 
 画面録画から技を自動抽出する収集ツール。
 

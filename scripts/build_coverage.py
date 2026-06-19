@@ -23,14 +23,7 @@ OUT_PATH = _data.ROOT / "site" / "coverage.json"
 BADGE_PATH = _data.ROOT / "site" / "badge.json"
 
 
-def _badge_color(percent: float) -> str:
-    if percent >= 80:
-        return "1B5E20"
-    if percent >= 50:
-        return "E65100"
-    if percent >= 20:
-        return "BF360C"
-    return "B71C1C"
+_BADGE_COLOR = "424242"
 
 
 def main() -> int:
@@ -69,7 +62,7 @@ def main() -> int:
         "schemaVersion": 1,
         "label": "収録",
         "message": f"{done}/{total} ({percent}%)",
-        "color": _badge_color(percent),
+        "color": _BADGE_COLOR,
     }
     BADGE_PATH.write_text(
         json.dumps(badge, ensure_ascii=False, indent=2) + "\n",
