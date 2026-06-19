@@ -25,12 +25,12 @@ BADGE_PATH = _data.ROOT / "site" / "badge.json"
 
 def _badge_color(percent: float) -> str:
     if percent >= 80:
-        return "1F883D"
+        return "1B5E20"
     if percent >= 50:
-        return "9A6700"
+        return "E65100"
     if percent >= 20:
-        return "BC4C00"
-    return "CF222E"
+        return "BF360C"
+    return "B71C1C"
 
 
 def main() -> int:
