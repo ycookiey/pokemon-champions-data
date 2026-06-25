@@ -35,6 +35,11 @@ POKEDEX_URL = "https://github.com/towakey/pokedex"
 # docs/SOURCES.md の固定 commit はこの値を転記すること (ここが正本)。
 PINNED_COMMIT = "d89793ca662e0f85c41d5306028b5418c78f30de"
 
+# towakey/pokedex に無いがゲーム内に実在する技の手動補完 (原則の最小例外)。
+SUPPLEMENT_MOVES: list[str] = [
+    "トラバサミ",
+]
+
 # towakey/pokedex の世代ディレクトリを古い順に並べる。同一技の世代間表記ゆれ
 # (全角/半角・スペース有無) は最新世代の綴りを正規とする (Champions は最新作
 # Scarlet_Violet に最も近いため)。GEN_ORDER 外の未知世代は最古扱い (-1)。
@@ -132,6 +137,13 @@ def build(src_root: Path) -> int:
         collapsed.setdefault(k, []).append(name)
         if k not in groups or _pick_key(name) > _pick_key(groups[k]):
             groups[k] = name
+
+    for name in SUPPLEMENT_MOVES:
+        k = _data.normalize_move_key(name)
+        if k not in groups:
+            groups[k] = name
+            collapsed.setdefault(k, []).append(name)
+            print(f"  補完: {name!r} (towakey/pokedex に無し)")
 
     # 集約された (= 複数表記を 1 件に潰した) 群を可視化する。
     for k, variants in sorted(collapsed.items()):
